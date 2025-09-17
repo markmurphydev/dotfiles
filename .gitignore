@@ -1,5 +1,6 @@
 /*
 
 !/.gitignore
-!/emacs
-!/emacs/*
+!/emacs/
+/emacs/*
+!/emacs/init.el
