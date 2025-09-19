@@ -1,4 +1,4 @@
-;; ==== Config folder ====
+;; ==== Config folder setup ====
 
 ;; Make Emacs store autosave files in /tmp directory
 ;; https://www.reddit.com/r/emacs/comments/ym3t77/how_to_delete_auto_save_files_when_quitting_emacs/
@@ -61,13 +61,26 @@
     (evil-mode)
     (evil-define-key 'normal 'global (kbd "U") #'evil-redo)
     (evil-define-key 'motion 'global (kbd "C-u") #'evil-scroll-up)
+    (evil-define-key 'motion 'global (kbd "s-/") #'comment-line)
     (evil-define-key 'motion 'global (kbd "SPC") nil)
-    (evil-define-key 'motion 'global (kbd "SPC x") #'execute-extended-command)
+    (evil-define-key 'motion 'global (kbd "SPC w d") #'evil-quit)
+    (evil-define-key 'motion 'global (kbd "SPC w h") #'evil-window-left)
+    (evil-define-key 'motion 'global (kbd "SPC w j") #'evil-window-down)
+    (evil-define-key 'motion 'global (kbd "SPC w k") #'evil-window-up)
+    (evil-define-key 'motion 'global (kbd "SPC w l") #'evil-window-right)
+    (evil-define-key 'motion 'global (kbd "SPC w v") #'evil-window-vsplit)
+    (evil-define-key 'motion 'global (kbd "SPC r r") #'reload)
+    (evil-define-key 'motion 'global (kbd "SPC o") #'find-file)
+    (evil-define-key 'motion 'global (kbd "SPC f f") #'find-file)
     (evil-define-key 'motion 'global (kbd "SPC h f") #'describe-function)
     (evil-define-key 'motion 'global (kbd "SPC h k") #'describe-key)
     (evil-define-key 'motion 'global (kbd "SPC h v") #'describe-variable)
-    (evil-define-key 'motion 'global (kbd "SPC o") #'find-file)
-    (evil-define-key 'motion 'global (kbd "SPC b b") #'consult-buffer))
+    (evil-define-key 'motion 'global (kbd "SPC ;") #'eval-expression)
+    (evil-define-key 'motion 'global (kbd "SPC x") #'execute-extended-command)
+    (evil-define-key 'motion 'global (kbd "SPC b b") #'consult-buffer)
+    (evil-define-key 'motion 'global (kbd "SPC b p") #'previous-buffer)
+    (evil-define-key 'motion 'global (kbd "SPC b d") #'kill-current-buffer)
+    (evil-define-key 'motion 'global (kbd "SPC b n") #'next-buffer))
 
 ;; == evil-collection ==
 ;; Vim keybindings outside of text buffers
@@ -111,6 +124,56 @@
 ;; == consult ==
 ;; buffer-picker etc.
 (use-package consult :ensure (:tag "2.8"))
+
+
+;; == ultra-scroll ==
+;; Smooth scroll
+;; https://github.com/jdtsmith/ultra-scroll
+(use-package ultra-scroll
+  :ensure (:tag "v0.4.2") :demand t
+  :custom
+  (scroll-conservatively 3) ;; idk
+  (scroll-margin 0)
+  :config
+  (ultra-scroll-mode t))
+
+
+;; == embark ==
+;; list options at point (CMD-.)
+(use-package embark :ensure (:tag "1.1")
+  :bind
+  (("s-." . embark-act)))
+
+(use-package embark-consult
+  :ensure t
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
+
+;; == corfu ==
+;; Intellisense
+(use-package corfu :ensure (:tag "2.3")
+  :custom
+  (corfu-auto t)
+  (corfu-quit-no-match 'separator)
+  :init
+  (global-corfu-mode))
+
+
+;; == eldoc-box ==
+;; hover-box info
+(use-package eldoc-box :ensure (:tag "v1.14.1")
+  :bind
+  (("s-l" . eldoc-box-help-at-point)))
+
+
+;; ==== Major Modes ====
+
+;; == markdown-mode ==
+;; https://jblevins.org/projects/markdown-mode/
+(use-package markdown-mode
+  :ensure t
+  :mode ("*\\.md\\'" . gfm-mode))
 
 
 ;; ==== Commands ====

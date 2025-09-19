@@ -1,6 +1,6 @@
 ;; == Elpaca ==
 ;; Disable package.el for Elpaca
-(setq package-enable-at-startup nil)
+(setopt package-enable-at-startup nil)
 
 ;; == GUI Settings ==
 ;; Start maximized
