@@ -15,96 +15,24 @@
 ;; Elpaca package manager
 (load (expand-file-name "elpaca.el" user-emacs-directory))
 
-;; ==== Emacs settings ====
-
-;; == GUI settings ==
-;; Start focused
-;; https://apple.stackexchange.com/questions/467216/emacs-starts-up-without-window-focus-in-macos-sonoma
-(select-frame-set-input-focus (selected-frame))
-;; Theme
-(use-package monokai-theme :ensure t :demand t
-    :config
-    (load-theme 'monokai t))
-
-;; == Keybindings ==
-;; Command-backspace
-(defun mark--kill-to-line-start ()
-  "kill to start of line."
-  (interactive)
-  (kill-line 0))
-(define-key global-map (kbd "s-<backspace>") #'mark--kill-to-line-start)
-;; minibuffer quit
-(define-key global-map (kbd "<escape>") #'keyboard-escape-quit)
-;; Minibuffer keybindings
-(define-key minibuffer-mode-map (kbd "M-<backspace>") #'backward-kill-word)
-(define-key minibuffer-mode-map (kbd "s-<backspace>") #'mark--kill-to-line-start)
-
-
-;; == Vertico support ==
-;; Support opening new minibuffers from inside existing minibuffers.
-(setopt enable-recursive-minibuffers t)
-;; Hide commands in M-x which do not work in the current mode.
-(setopt read-extended-command-predicate #'command-completion-default-include-p)
-;; Do not allow the cursor in the minibuffer prompt
-(setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
-
-
 ;; ==== Packages ====
+
+;; == general ==
+;; keybindings
+(use-package general :ensure t :demand t)
 
 ;; == evil ==
 (use-package evil :ensure (:tag "1.14.2") :demand t
-    ;; I don't think :bind works correctly with evil.
-    ;; I'll just do things evil's way.
-    :custom
-    (evil-undo-system 'undo-redo)
-    :config
-    (evil-mode)
-    (evil-define-key 'normal 'global (kbd "U") #'evil-redo)
-    (evil-define-key 'motion 'global (kbd "C-u") #'evil-scroll-up)
-    (evil-define-key 'motion 'global (kbd "s-/") #'comment-line)
-    (evil-define-key 'motion 'global (kbd "SPC") nil)
-    (evil-define-key 'motion 'global (kbd "SPC w d") #'evil-quit)
-    (evil-define-key 'motion 'global (kbd "SPC w h") #'evil-window-left)
-    (evil-define-key 'motion 'global (kbd "SPC w j") #'evil-window-down)
-    (evil-define-key 'motion 'global (kbd "SPC w k") #'evil-window-up)
-    (evil-define-key 'motion 'global (kbd "SPC w l") #'evil-window-right)
-    (evil-define-key 'motion 'global (kbd "SPC w v") #'evil-window-vsplit)
-    (evil-define-key 'motion 'global (kbd "SPC r r") #'reload)
-    (evil-define-key 'motion 'global (kbd "SPC o") #'find-file)
-    (evil-define-key 'motion 'global (kbd "SPC f f") #'find-file)
-    (evil-define-key 'motion 'global (kbd "SPC h f") #'describe-function)
-    (evil-define-key 'motion 'global (kbd "SPC h k") #'describe-key)
-    (evil-define-key 'motion 'global (kbd "SPC h v") #'describe-variable)
-    (evil-define-key 'motion 'global (kbd "SPC ;") #'eval-expression)
-    (evil-define-key 'motion 'global (kbd "SPC x") #'execute-extended-command)
-    (evil-define-key 'motion 'global (kbd "SPC b b") #'consult-buffer)
-    (evil-define-key 'motion 'global (kbd "SPC b p") #'previous-buffer)
-    (evil-define-key 'motion 'global (kbd "SPC b d") #'kill-current-buffer)
-    (evil-define-key 'motion 'global (kbd "SPC b n") #'next-buffer))
+  ;; I don't think :bind works correctly with evil.
+  ;; I'll just do things evil's way.
+  :custom
+  (evil-undo-system 'undo-redo)
+  :config
+  (evil-mode))
 
 ;; == evil-collection ==
 ;; Vim keybindings outside of text buffers
-(use-package evil-collection :ensure (:ref "1cf0f9654bbb53a1093b545a64df299f4aca3f9d")
-    :after evil
-    :custom
-    (evil-collection-key-blacklist '("SPC"))
-    :config
-    (evil-collection-init))
-
-;; == vertico ==
-;; Useable completions
-;; https://github.com/minad/vertico
-(use-package vertico :ensure (:tag "2.5") :demand t
-    :init
-    (vertico-mode)
-    ; Persist history over Emacs restarts. Vertico sorts by history position.
-    (savehist-mode)
-    (vertico-multiform-mode))
-
-
-;; == orderless ==
-;; fuzzy completion
-;; https://github.com/oantolin/orderless
+; (use-package evil-collection :ensure (:ref "1cf0f9654bbb53a1093b545a64df299f4aca3f9d"))
 (use-package orderless
   :ensure t
   :custom
@@ -117,8 +45,8 @@
 ;; Annotations for completions
 ;; https://github.com/minad/marginalia
 (use-package marginalia :ensure (:tag "2.3") :demand t
-    :init
-    (marginalia-mode))
+  :init
+  (marginalia-mode))
 
 
 ;; == consult ==
@@ -141,8 +69,8 @@
 ;; == embark ==
 ;; list options at point (CMD-.)
 (use-package embark :ensure (:tag "1.1")
-  :bind
-  (("s-." . embark-act)))
+  :general
+  (general-def "s-." #'embark-act))
 
 (use-package embark-consult
   :ensure t
@@ -176,9 +104,73 @@
   :mode ("*\\.md\\'" . gfm-mode))
 
 
+;; ==== Emacs settings ====
+
+;; Tabs
+(setopt indent-tabs-mode t)
+
+;; == GUI settings ==
+;; Start focused
+;; https://apple.stackexchange.com/questions/467216/emacs-starts-up-without-window-focus-in-macos-sonoma
+(select-frame-set-input-focus (selected-frame))
+;; Theme
+(use-package monokai-theme :ensure t :demand t
+  :config
+  (load-theme 'monokai t))
+
+;; == Vertico support ==
+;; Support opening new minibuffers from inside existing minibuffers.
+(setopt enable-recursive-minibuffers t)
+;; Hide commands in M-x which do not work in the current mode.
+(setopt read-extended-command-predicate #'command-completion-default-include-p)
+;; Do not allow the cursor in the minibuffer prompt
+(setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
+
+;; ==== Keybindings ====
+(use-package emacs :ensure t
+    :general
+    (general-def
+    ;; Command-backspace
+    "s-<backspace>" #'mark--kill-to-line-start
+    ;; minibuffer quit
+    "<escape>" #'keyboard-escape-quit)
+  ;; Minibuffer keybindings
+  (general-def minibuffer-mode-map
+    "M-<backspace>" #'backward-kill-word
+    "s-<backspace>" #'mark--kill-to-line-start)
+  (general-def 'motion
+    "U" #'evil-redo
+    "C-u" #'evil-scroll-up
+    "s-/" #'comment-line)
+  (general-def 'motion
+    :prefix "SPC"
+    "w d" #'evil-quit
+    "w h" #'evil-window-left
+    "w j" #'evil-window-down
+    "w k" #'evil-window-up
+    "w l" #'evil-window-right
+    "w v" #'evil-window-vsplit
+    "r r" #'mark-reload
+    "o" #'find-file
+    "f f" #'find-file
+    "h f" #'describe-function
+    "h k" #'describe-key
+    "h v" #'describe-variable
+    ";" #'eval-expression
+    "x" #'execute-extended-command
+    "b b" #'consult-buffer
+    "b p" #'previous-buffer
+    "b d" #'kill-current-buffer
+    "b n" #'next-buffer))
+
 ;; ==== Commands ====
 
-(defun reload ()
+(defun mark--kill-to-line-start ()
+  "kill to start of line."
+  (interactive)
+  (kill-line 0))
+
+(defun mark-reload ()
   "Reload init.el"
   (interactive)
   (load-file user-init-file))
