@@ -8,6 +8,7 @@
 (elpaca elpaca-use-package
   ;; Enable use-package :ensure support for Elpaca.
   (elpaca-use-package-mode))
+(setopt use-package-always-ensure t)
 
 ;; Make Emacs store autosave files in /tmp directory
 ;; https://www.reddit.com/r/emacs/comments/ym3t77/how_to_delete_auto_save_files_when_quitting_emacs/
@@ -21,28 +22,30 @@
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file)
 
-;; ==== Keybindings ====
-;; Uses `general.el`
+
+;; ==== Packages ====
+
+;; == general ==
+;; Keybindings
 ;; https://github.com/noctuid/general.el
 ;; NB: `(:wait t)` means that use-package declarations 
 ;;  _after_ this command can use `:general` keyword
 ;; NB: Can't have `:general` definitions _in_ the `general` load
 (use-package general :ensure (:wait t) :demand)
 
-;; ==== Packages ====
-
-; ;; == evil ==
+;; == evil ==
 (use-package evil :ensure (:tag "1.14.2") :demand t
   ;; I don't think :bind works correctly with evil.
   ;; I'll just do things evil's way.
   :init
+  ;; Avoid errors about prefix keys
   (general-auto-unbind-keys)
   :config
   (evil-mode)
   :custom
   (evil-undo-system 'undo-redo)
-    :general
-    (general-def
+  :general
+  (general-def
     ;; Command-backspace
     "s-<backspace>" #'mark--kill-to-line-start
     ;; minibuffer quit
@@ -63,7 +66,7 @@
     "w k" #'evil-window-up
     "w l" #'evil-window-right
     "w v" #'evil-window-vsplit
-    "r r" #'mark-reload
+    "r i" #'mark-reload-init
     "o" #'find-file
     "f f" #'find-file
     "h f" #'describe-function
@@ -78,9 +81,23 @@
 
 ;; == evil-collection ==
 ;; Vim keybindings outside of text buffers
-; (use-package evil-collection :ensure (:ref "1cf0f9654bbb53a1093b545a64df299f4aca3f9d"))
+;; (use-package evil-collection :ensure (:ref "1cf0f9654bbb53a1093b545a64df299f4aca3f9d"))
+
+
+;; == vertico ==
+;; completions
+(use-package vertico
+  :custom
+  (vertico-resize t) ; Grow and shrink the Vertico minibuffer
+  (setopt enable-recursive-minibuffers t) ; Support opening new minibuffers from inside existing minibuffers.
+  (setopt read-extended-command-predicate #'command-completion-default-include-p) ; Hide commands in M-x which do not work in the current mode.
+  (setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt)) ; Do not allow the cursor in the minibuffer prompt
+  :init
+  (vertico-mode))
+
+
+;; == orderless ==
 (use-package orderless
-  :ensure t
   :custom
   (completion-styles '(orderless basic))
   (completion-category-overrides '((file (styles partial-completion))))
@@ -95,11 +112,6 @@
   (marginalia-mode))
 
 
-;; == consult ==
-;; buffer-picker etc.
-(use-package consult :ensure (:tag "2.8"))
-
-
 ;; == ultra-scroll ==
 ;; Smooth scroll
 ;; https://github.com/jdtsmith/ultra-scroll
@@ -112,6 +124,11 @@
   (ultra-scroll-mode t))
 
 
+;; == consult ==
+;; buffer-picker etc.
+(use-package consult :ensure (:tag "2.8"))
+
+
 ;; == embark ==
 ;; list options at point (CMD-.)
 (use-package embark :ensure (:tag "1.1")
@@ -119,7 +136,6 @@
   (general-def "s-." #'embark-act))
 
 (use-package embark-consult
-  :ensure t
   :hook
   (embark-collect-mode . consult-preview-at-point-mode))
 
@@ -146,7 +162,6 @@
 ;; == markdown-mode ==
 ;; https://jblevins.org/projects/markdown-mode/
 (use-package markdown-mode
-  :ensure t
   :mode ("*\\.md\\'" . gfm-mode))
 
 
@@ -160,17 +175,10 @@
 ;; https://apple.stackexchange.com/questions/467216/emacs-starts-up-without-window-focus-in-macos-sonoma
 (select-frame-set-input-focus (selected-frame))
 ;; Theme
-(use-package monokai-theme :ensure t :demand t
+(use-package monokai-theme :demand t
   :config
   (load-theme 'monokai t))
 
-;; == Vertico support ==
-;; Support opening new minibuffers from inside existing minibuffers.
-(setopt enable-recursive-minibuffers t)
-;; Hide commands in M-x which do not work in the current mode.
-(setopt read-extended-command-predicate #'command-completion-default-include-p)
-;; Do not allow the cursor in the minibuffer prompt
-(setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
 
 ;; ==== Commands ====
 
@@ -179,7 +187,7 @@
   (interactive)
   (kill-line 0))
 
-(defun mark-reload ()
+(defun mark-reload-init ()
   "Reload init.el"
   (interactive)
   (load-file user-init-file))
