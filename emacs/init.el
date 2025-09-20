@@ -1,4 +1,13 @@
-;; ==== Config folder setup ====
+;; ==== Early setup ====
+
+;; == Elpaca ==
+;; Elpaca package manager
+(load (expand-file-name "elpaca.el" user-emacs-directory))
+
+;; Elpaca settings
+(elpaca elpaca-use-package
+  ;; Enable use-package :ensure support for Elpaca.
+  (elpaca-use-package-mode))
 
 ;; Make Emacs store autosave files in /tmp directory
 ;; https://www.reddit.com/r/emacs/comments/ym3t77/how_to_delete_auto_save_files_when_quitting_emacs/
@@ -12,23 +21,60 @@
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file)
 
-;; Elpaca package manager
-(load (expand-file-name "elpaca.el" user-emacs-directory))
+;; ==== Keybindings ====
+;; Uses `general.el`
+;; https://github.com/noctuid/general.el
+;; NB: `(:wait t)` means that use-package declarations 
+;;  _after_ this command can use `:general` keyword
+;; NB: Can't have `:general` definitions _in_ the `general` load
+(use-package general :ensure (:wait t) :demand)
 
 ;; ==== Packages ====
 
-;; == general ==
-;; keybindings
-(use-package general :ensure t :demand t)
-
-;; == evil ==
+; ;; == evil ==
 (use-package evil :ensure (:tag "1.14.2") :demand t
   ;; I don't think :bind works correctly with evil.
   ;; I'll just do things evil's way.
+  :init
+  (general-auto-unbind-keys)
+  :config
+  (evil-mode)
   :custom
   (evil-undo-system 'undo-redo)
-  :config
-  (evil-mode))
+    :general
+    (general-def
+    ;; Command-backspace
+    "s-<backspace>" #'mark--kill-to-line-start
+    ;; minibuffer quit
+    "<escape>" #'keyboard-escape-quit)
+  ;; Minibuffer keybindings
+  (general-def minibuffer-mode-map
+    "M-<backspace>" #'backward-kill-word
+    "s-<backspace>" #'mark--kill-to-line-start)
+  (general-def 'motion
+    "U" #'evil-redo
+    "C-u" #'evil-scroll-up
+    "s-/" #'comment-line)
+  (general-def 'motion
+    :prefix "SPC"
+    "w d" #'evil-quit
+    "w h" #'evil-window-left
+    "w j" #'evil-window-down
+    "w k" #'evil-window-up
+    "w l" #'evil-window-right
+    "w v" #'evil-window-vsplit
+    "r r" #'mark-reload
+    "o" #'find-file
+    "f f" #'find-file
+    "h f" #'describe-function
+    "h k" #'describe-key
+    "h v" #'describe-variable
+    ";" #'eval-expression
+    "x" #'execute-extended-command
+    "b b" #'consult-buffer
+    "b p" #'previous-buffer
+    "b d" #'kill-current-buffer
+    "b n" #'next-buffer))
 
 ;; == evil-collection ==
 ;; Vim keybindings outside of text buffers
@@ -125,43 +171,6 @@
 (setopt read-extended-command-predicate #'command-completion-default-include-p)
 ;; Do not allow the cursor in the minibuffer prompt
 (setopt minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
-
-;; ==== Keybindings ====
-(use-package emacs :ensure t
-    :general
-    (general-def
-    ;; Command-backspace
-    "s-<backspace>" #'mark--kill-to-line-start
-    ;; minibuffer quit
-    "<escape>" #'keyboard-escape-quit)
-  ;; Minibuffer keybindings
-  (general-def minibuffer-mode-map
-    "M-<backspace>" #'backward-kill-word
-    "s-<backspace>" #'mark--kill-to-line-start)
-  (general-def 'motion
-    "U" #'evil-redo
-    "C-u" #'evil-scroll-up
-    "s-/" #'comment-line)
-  (general-def 'motion
-    :prefix "SPC"
-    "w d" #'evil-quit
-    "w h" #'evil-window-left
-    "w j" #'evil-window-down
-    "w k" #'evil-window-up
-    "w l" #'evil-window-right
-    "w v" #'evil-window-vsplit
-    "r r" #'mark-reload
-    "o" #'find-file
-    "f f" #'find-file
-    "h f" #'describe-function
-    "h k" #'describe-key
-    "h v" #'describe-variable
-    ";" #'eval-expression
-    "x" #'execute-extended-command
-    "b b" #'consult-buffer
-    "b p" #'previous-buffer
-    "b d" #'kill-current-buffer
-    "b n" #'next-buffer))
 
 ;; ==== Commands ====
 
