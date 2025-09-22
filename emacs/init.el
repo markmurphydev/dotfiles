@@ -54,10 +54,12 @@
   (general-def minibuffer-mode-map
     "M-<backspace>" #'backward-kill-word
     "s-<backspace>" #'mark--kill-to-line-start)
+  (general-def '(motion insert)
+    "s-p" #'evil-paste-pop
+    "s-/" #'mark--comment-line)
   (general-def 'motion
     "U" #'evil-redo
-    "C-u" #'evil-scroll-up
-    "s-/" #'comment-line)
+    "C-u" #'evil-scroll-up)
   (general-def 'motion
     :prefix "SPC"
     "w d" #'evil-quit
@@ -83,6 +85,14 @@
 ;; Vim keybindings outside of text buffers
 ;; (use-package evil-collection :ensure (:ref "1cf0f9654bbb53a1093b545a64df299f4aca3f9d"))
 
+;; == treesit-auto ==
+;; https://github.com/renzmann/treesit-auto
+(use-package treesit-auto :ensure (:tag "v1.0.5") :demand t
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
 
 ;; == vertico ==
 ;; completions
@@ -183,9 +193,23 @@
 ;; ==== Commands ====
 
 (defun mark--kill-to-line-start ()
-  "kill to start of line."
+  "Kill to start of line."
   (interactive)
   (kill-line 0))
+
+(defun mark--comment-line ()
+  "Comment line or active region, without moving the point."
+  (interactive)
+  (let* ((start-point (point)))
+    (if (use-region-p)
+	(progn (comment-dwim nil)
+	       ;; We're still in visual-state.
+	       ;; To restore the previous visual-state, we need to return to normal-state first.
+	       (evil-normal-state)
+	       (evil-visual-restore))
+      (progn (comment-line 1)
+	     (goto-char start-point)))))
+  
 
 (defun mark-reload-init ()
   "Reload init.el"
