@@ -40,6 +40,9 @@
   :init
   ;; Avoid errors about prefix keys
   (general-auto-unbind-keys)
+  ;; Unbind keys from troubled modes
+  (setf (cdr dired-mode-map) nil)
+  (setf (cdr help-mode-map) nil)
   :config
   (evil-mode)
   :custom
@@ -50,10 +53,12 @@
     "s-<backspace>" #'mark--kill-to-line-start
     ;; minibuffer quit
     "<escape>" #'keyboard-escape-quit)
-  ;; Minibuffer keybindings
   (general-def minibuffer-mode-map
     "M-<backspace>" #'backward-kill-word
     "s-<backspace>" #'mark--kill-to-line-start)
+  (general-def dired-mode-map
+    "RET" #'dired-find-file)
+  ;; Global keybindings
   (general-def '(motion insert)
     "s-p" #'evil-paste-pop
     "s-/" #'mark--comment-line)
