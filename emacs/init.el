@@ -44,7 +44,7 @@
   ;; Unbind keys from troubled modes
   (setf (cdr help-mode-map) nil)
   ;; Required for evil-collection
-  (setopt evil-want-collec nil)
+  ;; (setopt evil-want-keybinding nil)
   :config
   (evil-mode)
   :custom
@@ -55,13 +55,13 @@
   (general-unbind 'visual "s")
   (general-define-key
    ;; Command-backspace
-   "s-<backspace>" #'mark-kill-to-line-start
-   ;; minibuffer quit
-   "<escape>" #'keyboard-escape-quit)
+   "s-<backspace>" #'mark-kill-to-line-start)
   (general-define-key
    :keymaps 'minibuffer-mode-map
    "M-<backspace>" #'backward-kill-word
-   "s-<backspace>" #'mark-kill-to-line-start)
+   "s-<backspace>" #'mark-kill-to-line-start
+   ;; minibuffer quit
+   "<escape>" #'keyboard-escape-quit)
   ;; Global keybindings
   (general-define-key
     :states 'motion
@@ -89,6 +89,7 @@
     "p p" #'project-switch-project
     "p /" #'consult-ripgrep
     "f f" #'find-file
+    "f i" #'mark-edit-init-file
     "h f" #'describe-function
     "h k" #'describe-key
     "h v" #'describe-variable
@@ -104,8 +105,10 @@
 ;; == evil-surround ==
 ;; https://github.com/emacs-evil/evil-surround
 (use-package evil-surround
-  :config
+  :init
   (global-evil-surround-mode 1)
+  :hook
+  (lisp-mode-hook . slime-mode)
   :general
   (general-define-key
    :states 'visual
@@ -114,9 +117,13 @@
 
 ;; == evil-collection ==
 ;; https://github.com/emacs-evil/evil-collection
-(use-package evil-collection
-  :config
-  (setopt evil-collection-key-blacklist '("SPC")))
+;; (use-package evil-collection
+;;   :after evil
+;;   :ensure t
+;;   :custom
+;;   (evil-collection-key-blacklist '("SPC"))
+;;   :config
+;;   (evil-collection-init '(slime)))
 
 ;; == dired overrides ==
 ;; If you need to override evil keys for a major mode, use this method:
@@ -135,14 +142,15 @@
    "<return>" #'dired-find-file
    "m" #'dired-mark
    "d" #'dired-flag-file-deletion
-   "u" #'dired-unmark)
+   "M" #'dired-unmark)
   (general-define-key
+   :definer 'minor-mode
    :states 'normal
-   :keymaps 'dired-mode-map
-   :prefix "SPC m"
-   "d" #'dired-do-flagged-delete
+   :keymaps 'dired-keys-mode
+   :prefix "SPC"
    "c d" #'dired-create-directory
-   "r" #'dired-do-rename)
+   "m d" #'dired-do-flagged-delete
+   "m r" #'dired-do-rename)
   :hook
   (dired-mode-hook . dired-keys-mode))
 
@@ -152,8 +160,8 @@
   :custom
   (treesit-auto-install 'prompt)
   :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
+  (global-treesit-auto-mode)
+  (treesit-auto-add-to-auto-mode-alist 'all))
 
 ;; == vertico ==
 ;; completions
@@ -235,69 +243,12 @@
 (which-key-mode 1)
 (setopt which-key-idle-delay 0.05)
 
-
-;; ==== Major Modes ====
-
-;; == markdown-mode ==
-;; https://jblevins.org/projects/markdown-mode/
-(use-package markdown-mode
-  :mode ("*\\.md\\'" . gfm-mode))
-
-;; == sly-mode ==
-;; Common lisp
-;; https://github.com/joaotavora/sly
-(use-package sly
-  :custom
-  (inferior-lisp-program "/opt/homebrew/bin/sbcl")
-  :general
-  (general-define-key
-   :states 'normal
-   :keymaps 'sly-mode-map
-   "g d" #'sly-edit-definition)
-  (general-define-key
-   :states 'normal
-   :keymaps 'sly-mode-map
-   :prefix "SPC"
-   "e e" #'mark-sly-eval-last-expression
-   "e r" #'sly-eval-region
-   "e f" #'sly-eval-defun
-   "e b" #'sly-eval-buffer
-   "e m" #'mark-sly-macroexpand-1
-   "m h" #'sly-hyperspec-lookup)
-  (general-define-key
-   :states 'normal
-   :keymaps 'sly-mrepl-mode-map
-   "<return>" #'sly-mrepl-return
-   "SPC k" #'consult-history
-   "SPC c" #'sly-mrepl-clear-repl))
-
-;; == geiser ==
-;; GNU Guile
-;; https://www.nongnu.org/geiser/
-(use-package geiser
-  :general
-  (general-define-key
-   :states 'normal
-   :keymaps 'geiser-mode-map
-   :prefix "SPC"
-   "e e" #'mark-geiser-eval-last-sexp
-   "e r" #'geiser-eval-region
-   "e f" #'geiser-eval-definition
-   "e b" #'geiser-eval-buffer
-   "e m" #'mark-geiser-expand-last-sexp))
-
-;; == paredit ==
-(use-package paredit
-  :hook
-  ((lisp-mode-hook emacs-lisp-mode-hook). paredit-mode))
-
-;; == evil-cleverparens ==
-;; https://github.com/emacs-evil/evil-cleverparens?tab=readme-ov-file
-(use-package evil-cleverparens
-  :init
-  (setopt evil-cleverparens-use-s-and-S nil)
-  :hook
-  (paredit-mode-hook . #'evil-cleverparens-mode))
+;; == mode-minder ==
+;; List major, minor modes
+;; https://github.com/jdtsmith/mode-minder
+(use-package mode-minder
+  :ensure (:host github :repo "jdtsmith/mode-minder")
+  :demand t)
 
 
 ;; == transient ==
@@ -309,7 +260,129 @@
 (use-package magit :ensure (:tag "v4.4.0"))
 
 
+;; ==== Major Modes ====
+
+;; == Cider ==
+(use-package cider :demand t)
+
+;; == markdown-mode ==
+;; https://jblevins.org/projects/markdown-mode/
+(use-package markdown-mode
+  :mode ("*\\.md\\'" . gfm-mode))
+
+;; == wat-mode ==
+(use-package wat-ts-mode)
+
+;; == slime-mode ==
+;; Common lisp
+;; https://github.com/slime/slime
+
+(use-package slime
+  :init
+  (setopt inferior-lisp-program "/opt/homebrew/bin/sbcl")
+  :general
+  ;; Escape in slime debug
+  (general-define-key
+   :keymaps 'sldb-mode-map
+   "<escape>" #'sldb-quit)
+  (general-define-key
+   :states 'global
+   :keymaps 'slime-repl-mode-map
+   "C-k" #'slime-repl-previous-input
+   "C-j" #'slime-repl-next-input
+   (general-define-key
+    :states 'normal
+    :keymaps 'slime-repl-mode-map
+    "SPC k" #'consult-history
+    "SPC c" #'slime-repl-clear-buffer)
+   (general-define-key
+    :states 'normal
+    :keymaps 'slime-mode-map
+    "g d" #'slime-edit-definition))
+  (general-define-key
+   :states 'visual
+   :keymaps 'slime-mode-map
+   :prefix "SPC"
+   "c c" #'slime-compile-region)
+  (general-define-key
+   :states 'normal
+   :keymaps 'slime-mode-map
+   :prefix "SPC"
+   "e e" #'slime-eval-defun
+   "e m" #'slime-macroexpand-1-inplace
+   "c c" #'slime-compile-defun
+   "c f" #'slime-compile-file
+   "m h" #'slime-hyperspec-lookup))
+
+
+;; == sly-mode ==
+;; Common lisp
+;; https://github.com/joaotavora/sly
+;; (use-package sly
+;;   :custom
+;;   (inferior-lisp-program "/opt/homebrew/bin/sbcl")
+;;   :general
+;;   (general-define-key
+;;    :states 'normal
+;;    :keymaps 'sly-mode-map
+;;    "g d" #'sly-edit-definition)
+;;   (general-define-key
+;;    :states 'normal
+;;    :keymaps 'sly-mode-map
+;;    :prefix "SPC"
+;;    "e e" #'mark-sly-eval-last-expression
+;;    "e r" #'sly-eval-region
+;;    "e f" #'sly-eval-defun
+;;    "e b" #'sly-eval-buffer
+;;    "e m" #'mark-sly-macroexpand-1
+;;    "m h" #'sly-hyperspec-lookup)
+;;   (general-define-key
+;;    :states 'normal
+;;    :keymaps 'sly-mrepl-mode-map
+;;    "<return>" #'sly-mrepl-return
+;;    "SPC k" #'consult-history
+;;    "SPC c" #'sly-mrepl-clear-repl))
+
+;; == geiser ==
+;; GNU Guile
+;; https://www.nongnu.org/geiser/
+;; (use-package geiser
+;;   :general
+;;   (general-define-key
+;;    :states 'normal
+;;    :keymaps 'geiser-mode-map
+;;    :prefix "SPC"
+;;    "e e" #'mark-geiser-eval-last-sexp
+;;    "e r" #'geiser-eval-region
+;;    "e f" #'geiser-eval-definition
+;;    "e b" #'geiser-eval-buffer
+;;    "e m" #'mark-geiser-expand-last-sexp))
+
+;; == paredit ==
+;; (use-package paredit
+;;   :hook
+;;   ((lisp-mode-hook emacs-lisp-mode-hook). paredit-mode))
+
+;; == evil-cleverparens ==
+;; https://github.com/emacs-evil/evil-cleverparens?tab=readme-ov-file
+;; (use-package evil-cleverparens
+;;   :init
+;;   (setopt evil-cleverparens-use-s-and-S nil)
+;;   :hook
+;;   (paredit-mode-hook . #'evil-cleverparens-mode))
+
+;; == tuareg ==
+;; Ocaml
+;; https://github.com/ocaml/tuareg
+;; (use-package tuareg)
+
+
 ;; ==== Emacs settings ====
+;; Auto refresh buffers
+(global-auto-revert-mode t)
+;; Also auto refresh dired, but be quiet about it
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
 
 ;; Tabs
 (setopt indent-tabs-mode t)
@@ -331,6 +404,16 @@
 ;; Show scratch buffer on startup
 (setopt inhibit-startup-screen t)
 (setopt initial-scratch-message "")
+
+;; Make ESC stop closing windows?
+;; https://old.reddit.com/r/emacs/comments/10l40yi/how_do_i_make_esc_stop_closing_all_my_windows/j5usr8i/
+(defun +keyboard-escape-quit-adv (fun)
+  "Around advice for `keyboard-escape-quit' FUN.
+Preserve window configuration when pressing ESC."
+  (let ((buffer-quit-function (or buffer-quit-function #'ignore)))
+    (funcall fun)))
+(advice-add #'keyboard-escape-quit :around #'+keyboard-escape-quit-adv)
+
 
 
 ;; ==== Commands ====
@@ -370,6 +453,10 @@
   (interactive)
   (mark--eval-last #'sly-eval-last-expression))
 
+(defun mark-sly-eval-last-expression ()
+  (interactive)
+  (mark--eval-last #'sly-eval-last-expression))
+
 (defun mark-sly-macroexpand-1 ()
   (interactive)
   (mark--eval-last #'sly-macroexpand-1))
@@ -381,3 +468,7 @@
 (defun mark-geiser-expand-last-sexp ()
   (interactive)
   (mark--eval-last #'geiser-expand-last-sexp))
+
+(defun mark-edit-init-file ()
+  (interactive)
+  (find-file "~/.config/emacs/init.el"))
