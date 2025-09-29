@@ -87,6 +87,7 @@
     "p b" #'project-switch-to-buffer
     "p f" #'project-find-file
     "p p" #'project-switch-project
+    "p /" #'consult-ripgrep
     "f f" #'find-file
     "h f" #'describe-function
     "h k" #'describe-key
@@ -261,15 +262,29 @@
    "e r" #'sly-eval-region
    "e f" #'sly-eval-defun
    "e b" #'sly-eval-buffer
-   "e m" #'mark-sly-macroexpand-all
-   "m h s" #'sly-describe-symbol
-   "m h f" #'sly-describe-function)
+   "e m" #'mark-sly-macroexpand-1
+   "m h" #'sly-hyperspec-lookup)
   (general-define-key
    :states 'normal
    :keymaps 'sly-mrepl-mode-map
    "<return>" #'sly-mrepl-return
    "SPC k" #'consult-history
    "SPC c" #'sly-mrepl-clear-repl))
+
+;; == geiser ==
+;; GNU Guile
+;; https://www.nongnu.org/geiser/
+(use-package geiser
+  :general
+  (general-define-key
+   :states 'normal
+   :keymaps 'geiser-mode-map
+   :prefix "SPC"
+   "e e" #'mark-geiser-eval-last-sexp
+   "e r" #'geiser-eval-region
+   "e f" #'geiser-eval-definition
+   "e b" #'geiser-eval-buffer
+   "e m" #'mark-geiser-expand-last-sexp))
 
 ;; == paredit ==
 (use-package paredit
@@ -355,6 +370,14 @@
   (interactive)
   (mark--eval-last #'sly-eval-last-expression))
 
-(defun mark-sly-macroexpand-all ()
+(defun mark-sly-macroexpand-1 ()
   (interactive)
-  (mark--eval-last #'sly-macroexpand-all))
+  (mark--eval-last #'sly-macroexpand-1))
+
+(defun mark-geiser-eval-last-sexp ()
+  (interactive)
+  (mark--eval-last #'geiser-eval-last-sexp))
+
+(defun mark-geiser-expand-last-sexp ()
+  (interactive)
+  (mark--eval-last #'geiser-expand-last-sexp))
